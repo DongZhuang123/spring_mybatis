@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <!--    注解扫描db。properties-->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!--    配置c3po数据源-->
+    <bean id="dataSource" class="${dataSouce}">
+        <property name="driverClassName" value="${driverClass}"/>
+        <property name="url" value="${jdbcUrl}"/>
+        <property name="username" value="${user}"/>
+        <property name="password" value="${password}"/>
+    </bean>
+
+    <bean id="settings" class="org.apache.ibatis.session.Configuration">
+        <property name="logImpl" value="org.apache.ibatis.logging.log4j.Log4jImpl"></property>
+    </bean>
+    <!--    配置session工厂 -->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <!--settings-->
+        <property name="configuration" ref="settings"></property>
+        <!--批量别名-->
+        <property name="typeAliasesPackage" value="com.hy.spring_mybatis.pojo" ></property>
+
+        <!--plugs 反页拦截器-->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor"></bean>
+            </array>
+        </property>
+     </bean>
+<!--spring批量扫描mybatis的mapper接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.hy.spring_mybatis.mapper"></property>
+        <!--<property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"></property>-->
+    </bean>
+
+    <!--自定义参数绑定-->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <!--          装换器-->
+        <property name="converters">
+            <!--               日期类型转换器-->
+            <list>
+                <bean class="com.hy.spring_mybatis.date.DateConverter"></bean>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!--  set the max upload size100MB     -->
+        <property name="maxUploadSize">
+            <value>104857600</value>
+        </property>
+        <property name="maxInMemorySize">
+            <value>4096</value>
+        </property>
+    </bean>
+
+   
+
+    <mvc:annotation-driven conversion-service="conversionService"></mvc:annotation-driven>
+<!--扫描带有注解的类 SpringMvc contter-->
+    <context:component-scan base-package="com.hy.spring_mybatis"></context:component-scan>
+
+
+</beans>
